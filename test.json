@@ -1,0 +1,27 @@
+{
+  "page": "home",
+  "section": "testimonials",
+  "data": [
+    {
+      "id": "testimonial1",
+      "name": "Anjali Mehta",
+      "designation": "Software Engineer",
+      "message": "The staff was incredibly professional and welcoming. The treatments made a noticeable difference, and I feel so much more confident now!",
+      "image": "/uploads/1752928000001-anjali_mehta.jpg"
+    },
+    {
+      "id": "testimonial2",
+      "name": "Rahul Verma",
+      "designation": "Marketing Consultant",
+      "message": "I was facing severe hair loss, but after the PRP sessions, I’ve regained both my hair and confidence. Highly recommended!",
+      "image": "/uploads/1752928054321-rahul_verma.jpg"
+    },
+    {
+      "id": "testimonial3",
+      "name": "Dr. Shalini Rao",
+      "designation": "Dentist",
+      "message": "Exceptional service and attention to detail. My skin looks healthier and more vibrant than ever. A trustworthy clinic for all dermatology needs.",
+      "image": "/uploads/1752928123456-shalini_rao.jpg"
+    }
+  ]
+}

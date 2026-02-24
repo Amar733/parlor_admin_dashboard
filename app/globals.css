@@ -1,0 +1,187 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 249 8% 97.8%; /* Very light gray */
+    --foreground: 260 10% 17%; /* Dark purple-gray */
+    --card: 0 0% 100%;
+    --card-foreground: 260 10% 17%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 260 10% 17%;
+    --primary: 263 70% 55%; /* Subtle purple */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 263 30% 95%; /* Lighter shade of purple */
+    --secondary-foreground: 263 70% 55%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 263 40% 92%; /* Accent purple */
+    --accent-foreground: 263 70% 55%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 263 70% 55%;
+    --radius: 0.5rem;
+    --chart-1: 263 70% 55%;
+    --chart-2: 263 60% 65%;
+    --chart-3: 263 50% 75%;
+    --chart-4: 263 40% 85%;
+    --chart-5: 263 30% 95%;
+  }
+
+  .dark {
+    --background: 260 10% 12%; /* Dark purple-gray */
+    --foreground: 0 0% 98%;
+    --card: 260 10% 12%;
+    --card-foreground: 0 0% 98%;
+    --popover: 260 10% 12%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 263 80% 70%; /* Lighter purple for dark mode */
+    --primary-foreground: 260 10% 12%;
+    --secondary: 263 20% 20%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 263 20% 20%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 263 30% 30%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 263 20% 25%;
+    --input: 263 20% 25%;
+    --ring: 263 80% 70%;
+    --chart-1: 263 80% 70%;
+    --chart-2: 263 70% 60%;
+    --chart-3: 263 60% 50%;
+    --chart-4: 263 50% 40%;
+    --chart-5: 263 40% 30%;
+  }
+  
+  * {
+    @apply border-border;
+  }
+  html {
+    overflow: hidden;
+    height: 100%;
+    width: 100%;
+  }
+  body {
+    @apply bg-background text-foreground;
+    overflow: hidden;
+    height: 100%;
+    width: 100%;
+    position: fixed;
+  }
+}
+
+@layer utilities {
+  /* Custom Scrollbar Styles */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--background));
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground));
+  }
+
+  .dark ::-webkit-scrollbar-track {
+    background: hsl(var(--background));
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+  }
+
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground));
+  }
+
+  /* POS Specific Styles */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .pos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.5rem;
+    padding: 0.25rem;
+  }
+
+  @media (max-width: 640px) {
+    .pos-grid {
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 0.25rem;
+    }
+  }
+
+  .pos-mobile-layout {
+    @apply flex flex-col h-screen;
+  }
+
+  @media (min-width: 1024px) {
+    .pos-mobile-layout {
+      @apply flex-row h-auto;
+    }
+  }
+}
+
+/* Print Styles for Digital Prescription */
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+  
+  /* Show standard print layout - Hide elements with 'print:hidden' class */
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Force A4 dimensions and white background */
+  html, body {
+    width: 210mm;
+    height: auto;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white;
+    overflow-x: hidden !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  /* Ensure pages break correctly */
+  .page-break-after-always {
+    break-after: page;
+    page-break-after: always;
+  }
+  
+  /* Force background colors and handle overflow for all elements */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Force containers to clip overflow */
+  .print\:overflow-hidden {
+    overflow: hidden !important;
+  }
+}
