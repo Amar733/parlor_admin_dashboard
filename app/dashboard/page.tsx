@@ -83,11 +83,11 @@ export default function DashboardPage() {
     setIsLoading(true);
     try {
       const [appsRes, patientsRes, usersRes, servRes, summariesRes] = await Promise.all([
-        authFetch('/api/appointments'),
-        authFetch('/api/patients'),
-        authFetch('/api/users'),
-        authFetch('/api/services'),
-        authFetch('/api/summaries'),
+        authFetch('/appointments'),
+        authFetch('/patients'),
+        authFetch('/users'),
+        authFetch('/services'),
+        authFetch('/summaries'),
       ]);
 
       if (!appsRes.ok || !patientsRes.ok || !usersRes.ok || !servRes.ok || !summariesRes.ok) {
@@ -155,7 +155,7 @@ export default function DashboardPage() {
     setIsGeneratingSummary(true);
     try {
       const todayStr = formatDate(new Date(), 'yyyy-MM-dd');
-      const response = await authFetch('/api/actions/generate-summary', {
+      const response = await authFetch('/actions/generate-summary', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ date: todayStr }),

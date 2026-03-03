@@ -10,7 +10,7 @@
 
 // export const API_BASE_URL = "https://apis.srmarnik.com";
 
- export const API_BASE_URL ="https://apis.srmarnik.com";
+//  export const API_BASE_URL ="https://apis.srmarnik.com";
 
 
 // Alternative configurations for different environments
@@ -26,7 +26,7 @@
 // export const API_BASE_URL = "https://apis.99clinix.com"; // Production
 
 //export const API_BASE_URL = ""; // Use local proxy (Next.js rewrites)
-// export const API_BASE_URL = "http://localhost:5002"; // Direct local backend
+export const API_BASE_URL = "http://localhost:5002"; // Direct local backend
 
 // export const API_BASE_URL = "https://staging.srmarnik.com";     // Staging environment
 

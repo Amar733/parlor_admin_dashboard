@@ -74,35 +74,63 @@ export function useAuth() {
         headers.set("Authorization", `Bearer ${currentToken}`);
       }
 
-      const response = await fetch(url, {
-        ...init,
-        headers,
-      });
+      console.log('Making API request to:', url);
+      console.log('With token:', currentToken ? 'Present' : 'Missing');
 
-      if (response.status === 401) {
-        logout();
-        throw new Error("Session expired. Please log in again.");
+      try {
+        const response = await fetch(url, {
+          ...init,
+          headers,
+        });
+
+        console.log('API Response status:', response.status);
+
+        if (response.status === 401) {
+          console.log('401 Unauthorized for URL:', url);
+          console.log('Token used:', currentToken?.substring(0, 20) + '...');
+          // Only logout for auth-specific endpoints, not data endpoints
+          if (url.toString().includes('/auth/') || url.toString().includes('/api/auth/')) {
+            logout();
+            throw new Error("Session expired. Please log in again.");
+          }
+          // For other endpoints, just return the response without logging out
+        }
+
+        return response;
+      } catch (error) {
+        console.error('API Request failed:', error);
+        if (error instanceof TypeError && error.message.includes('fetch')) {
+          console.error('Network error - check if backend is running at:', API_BASE_URL);
+        }
+        throw error;
       }
-
-      return response;
     },
     [logout]
   );
 
   const login = async (email: string, pass: string): Promise<void> => {
+    console.log('Attempting login to:', `${API_BASE_URL}/api/auth/login`);
+    
     const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: email, password: pass }),
     });
 
+    console.log('Login response status:', response.status);
+
     if (!response.ok) {
       const errorData = await response.json();
+      console.error('Login failed:', errorData);
       throw new Error(errorData.message || "Login failed");
     }
 
     const { token: newToken, user: userData }: { token: string; user: User } =
       await response.json();
+    
+    console.log('Login successful, token received:', newToken ? 'Yes' : 'No');
+    console.log('User data:', userData);
+    
     localStorage.setItem("srmarnik_user", JSON.stringify(userData));
     localStorage.setItem("srmarnik_token", newToken);
     setUser(userData);

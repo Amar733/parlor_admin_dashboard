@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, Tag, X } from "lucide-react";
+import { Loader2, Upload, Tag, X, Plus, Trash2, Sparkles, Shield, Award, Clock } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { getAssetUrl } from "@/lib/asset-utils";
 import { API_BASE_URL } from "@/config/api";
@@ -14,80 +14,92 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { SchemaMarkupEditor } from "@/components/schema-markup-editor";
 import { RichTextEditor } from "@/components/rich-text-editor";
+
+interface StoryItem {
+  title: string;
+  description: string;
+  image: string;
+}
+
+interface ValueItem {
+  icon: string;
+  title: string;
+  description: string;
+}
 
 interface AboutData {
   isEnable?: boolean;
-  image1: string;
-  image2: string;
-  experience_years: string;
-  features: string[];
-  subtitle: string;
-  title: string;
-  description: string;
+  story: StoryItem[];
+  values: ValueItem[];
   seo: {
     title: string;
     description: string;
     keywords: string[];
     slug: string;
-    schemaMarkup?: string;
-  };
-  alt_text_image1: string;
-  alt_text_image2: string;
-  primaryButton?: {
-    enabled: boolean;
-    buttonText: string;
-    chooseModuleToOpen: string;
-    url?: string;
-  };
-  secondaryButton?: {
-    enabled: boolean;
-    buttonText: string;
-    chooseModuleToOpen: string;
-    url?: string;
-  };
-  tertiaryButton?: {
-    enabled: boolean;
-    buttonText: string;
-    chooseModuleToOpen: string;
-    url?: string;
   };
 }
 
-export default function HomepageAboutPage() {
+const iconOptions = [
+  { value: "Sparkles", label: "Sparkles", icon: Sparkles },
+  { value: "Shield", label: "Shield", icon: Shield },
+  { value: "Award", label: "Award", icon: Award },
+  { value: "Clock", label: "Clock", icon: Clock },
+];
+
+const defaultAbout: AboutData = {
+  isEnable: true,
+  story: [
+    {
+      title: "Our Beginning",
+      description: "Founded in 2009 by Evelyn Reed, our salon started as a small, cozy studio with a passion for precision and a love for natural beauty. Evelyn's vision was to create a space where clients felt not only pampered but truly seen and heard.",
+      image: "https://images.unsplash.com/photo-1600948836101-f9ff52f7c7ec?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+    },
+    {
+      title: "A Philosophy of Care",
+      description: "We believe beauty is an expression of your inner self. Our approach combines technical mastery with a holistic touch, using premium, often organic, products to ensure your hair and skin radiate health. We listen, we advise, and we create looks that move with your life.",
+      image: "https://images.unsplash.com/photo-1560066984-13812b0c9d18?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+    },
+  ],
+  values: [
+    {
+      icon: "Sparkles",
+      title: "Artistry First",
+      description: "Every cut, color, and style is executed with the precision of an artist, tailored to your unique features.",
+    },
+    {
+      icon: "Shield",
+      title: "Premium Integrity",
+      description: "We use only the finest, ethically sourced products, prioritizing the long-term health of your hair and skin.",
+    },
+    {
+      icon: "Award",
+      title: "Excellence Always",
+      description: "Our team undergoes continuous training to master the latest trends and timeless techniques.",
+    },
+    {
+      icon: "Clock",
+      title: "Timeless Experience",
+      description: "From the moment you walk in, enjoy a serene, welcoming atmosphere designed for your relaxation.",
+    },
+  ],
+  seo: {
+    title: "",
+    description: "",
+    keywords: [],
+    slug: "",
+  },
+};
+
+export default function AboutCompanyStoryPage() {
   const { authFetch } = useAuth();
   const { toast } = useToast();
 
-  const [data, setData] = useState<AboutData>({
-    isEnable: true,
-    image1: "",
-    image2: "",
-    experience_years: "",
-    features: [],
-    subtitle: "",
-    title: "",
-    description: "",
-    seo: {
-      title: "",
-      description: "",
-      keywords: [],
-      slug: "",
-      schemaMarkup: "",
-    },
-    alt_text_image1: "",
-    alt_text_image2: "",
-    primaryButton: { enabled: false, buttonText: "Book Appointment", chooseModuleToOpen: "appointment", url: "" },
-    secondaryButton: { enabled: false, buttonText: "Learn More", chooseModuleToOpen: "services", url: "" },
-    tertiaryButton: { enabled: false, buttonText: "Contact Us", chooseModuleToOpen: "contact", url: "" },
-  });
-
+  const [data, setData] = useState<AboutData>(defaultAbout);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState<string | null>(null);
   const [keywordInput, setKeywordInput] = useState("");
-  const [featureInput, setFeatureInput] = useState("");
-  const [isSchemaValid, setIsSchemaValid] = useState(true);
 
   useEffect(() => {
     const loadData = async () => {
@@ -98,15 +110,9 @@ export default function HomepageAboutPage() {
           const result = await response.json();
           const loadedData = result.data || {};
           setData({
-            ...data,
+            ...defaultAbout,
             ...loadedData,
-            seo: loadedData.seo || {
-              title: "",
-              description: "",
-              keywords: [],
-              slug: "",
-              schemaMarkup: "",
-            },
+            seo: loadedData.seo || defaultAbout.seo,
           });
         }
       } catch (err) {
@@ -125,20 +131,11 @@ export default function HomepageAboutPage() {
   }, [authFetch, toast]);
 
   const handleSave = async () => {
-    if (!isSchemaValid) {
-      toast({
-        variant: "destructive",
-        title: "Invalid Schema Markup",
-        description: "Please fix the schema markup errors before saving.",
-      });
-      return;
-    }
-
     setSaving(true);
     try {
       const payload = {
-        page: "home",
-        section: "homepage_about",
+        page: "about",
+        section: "companyStory",
         data: data,
       };
 
@@ -149,7 +146,7 @@ export default function HomepageAboutPage() {
       });
 
       if (response.ok) {
-        toast({ title: "Homepage About updated successfully" });
+        toast({ title: "Company Story updated successfully" });
       } else {
         toast({ variant: "destructive", title: "Save failed", description: "Server error." });
       }
@@ -161,19 +158,15 @@ export default function HomepageAboutPage() {
     }
   };
 
-  const handleChange = (field: keyof AboutData, value: string | string[] | boolean) => {
-    setData({ ...data, [field]: value });
-  };
-
-  const handleToggleChange = async (field: keyof AboutData, value: boolean) => {
-    const updatedData = { ...data, [field]: value };
+  const handleToggleChange = async (checked: boolean) => {
+    const updatedData = { ...data, isEnable: checked };
     setData(updatedData);
 
     setSaving(true);
     try {
       const payload = {
-        page: "home",
-        section: "homepage_about",
+        page: "about",
+        section: "companyStory",
         data: updatedData,
       };
 
@@ -196,8 +189,8 @@ export default function HomepageAboutPage() {
     }
   };
 
-  const handleImageUpload = async (file: File, field: "image1" | "image2") => {
-    setUploading(field);
+  const handleImageUpload = async (file: File, storyIndex: number) => {
+    setUploading(`story-${storyIndex}`);
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -210,7 +203,11 @@ export default function HomepageAboutPage() {
       if (!response.ok) throw new Error("Upload failed");
 
       const { url } = await response.json();
-      handleChange(field, url);
+      
+      const updatedStory = [...data.story];
+      updatedStory[storyIndex] = { ...updatedStory[storyIndex], image: url };
+      setData({ ...data, story: updatedStory });
+      
       toast({ title: "Image uploaded successfully" });
     } catch (error) {
       toast({ variant: "destructive", title: "Upload failed" });
@@ -219,6 +216,61 @@ export default function HomepageAboutPage() {
     }
   };
 
+  // Story handlers
+  const addStoryItem = () => {
+    setData({
+      ...data,
+      story: [...data.story, { title: "", description: "", image: "" }]
+    });
+  };
+
+  const removeStoryItem = (index: number) => {
+    if (data.story.length <= 1) {
+      toast({
+        variant: "destructive",
+        title: "Cannot Remove",
+        description: "At least one story item is required.",
+      });
+      return;
+    }
+    const updatedStory = data.story.filter((_, i) => i !== index);
+    setData({ ...data, story: updatedStory });
+  };
+
+  const updateStoryItem = (index: number, field: keyof StoryItem, value: string) => {
+    const updatedStory = [...data.story];
+    updatedStory[index] = { ...updatedStory[index], [field]: value };
+    setData({ ...data, story: updatedStory });
+  };
+
+  // Values handlers
+  const addValueItem = () => {
+    setData({
+      ...data,
+      values: [...data.values, { icon: "Sparkles", title: "", description: "" }]
+    });
+  };
+
+  const removeValueItem = (index: number) => {
+    if (data.values.length <= 1) {
+      toast({
+        variant: "destructive",
+        title: "Cannot Remove",
+        description: "At least one value item is required.",
+      });
+      return;
+    }
+    const updatedValues = data.values.filter((_, i) => i !== index);
+    setData({ ...data, values: updatedValues });
+  };
+
+  const updateValueItem = (index: number, field: keyof ValueItem, value: string) => {
+    const updatedValues = [...data.values];
+    updatedValues[index] = { ...updatedValues[index], [field]: value };
+    setData({ ...data, values: updatedValues });
+  };
+
+  // SEO handlers
   const addKeyword = () => {
     if (!keywordInput.trim()) return;
     const currentKeywords = data.seo.keywords || [];
@@ -231,20 +283,6 @@ export default function HomepageAboutPage() {
   const removeKeyword = (index: number) => {
     const newKeywords = (data.seo.keywords || []).filter((_, i) => i !== index);
     setData({ ...data, seo: { ...data.seo, keywords: newKeywords } });
-  };
-
-  const addFeature = () => {
-    if (!featureInput.trim()) return;
-    const currentFeatures = data.features || [];
-    if (!currentFeatures.includes(featureInput.trim())) {
-      handleChange("features", [...currentFeatures, featureInput.trim()]);
-    }
-    setFeatureInput("");
-  };
-
-  const removeFeature = (index: number) => {
-    const newFeatures = (data.features || []).filter((_, i) => i !== index);
-    handleChange("features", newFeatures);
   };
 
   if (loading) {
@@ -262,16 +300,16 @@ export default function HomepageAboutPage() {
         <div className="relative z-10">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold">Homepage About Section</h1>
+              <h1 className="text-2xl font-bold">About Page - Company Story</h1>
               <p className="text-gray-700 text-sm">
-                Manage about section content and images
+                Manage company story and core values
               </p>
             </div>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <Switch
                   checked={data.isEnable ?? true}
-                  onCheckedChange={(checked) => handleToggleChange("isEnable", checked)}
+                  onCheckedChange={handleToggleChange}
                 />
                 <span className="text-sm font-medium">Section Enabled</span>
               </div>
@@ -285,415 +323,179 @@ export default function HomepageAboutPage() {
       </div>
 
       {/* Content Form */}
-      <div className="bg-white rounded-lg shadow p-6 space-y-6">
-        {/* Basic Info */}
+      <div className="bg-white rounded-lg shadow p-6 space-y-8">
+        {/* Company Story Section */}
         <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Subtitle</label>
-            <RichTextEditor
-              value={data.subtitle}
-              onChange={(value) => handleChange("subtitle", value)}
-              placeholder="ABOUT US"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Title</label>
-            <RichTextEditor
-              value={data.title}
-              onChange={(value) => handleChange("title", value)}
-              placeholder="ClinicPro+"
-            />
-          </div>
-        </div>
-
-        {/* Description */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Description</label>
-          <RichTextEditor
-            value={data.description}
-            onChange={(value) => handleChange("description", value)}
-            placeholder="Brief description about your clinic..."
-          />
-        </div>
-
-        {/* Experience Years */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Experience/Tagline</label>
-          <Input
-            value={data.experience_years}
-            onChange={(e) => handleChange("experience_years", e.target.value)}
-            placeholder="Efficiently & Effortlessly Manage Clinic"
-          />
-        </div>
-
-        {/* Features */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Features</label>
-          <div className="flex gap-2 mb-2">
-            <Input
-              value={featureInput}
-              onChange={(e) => setFeatureInput(e.target.value)}
-              placeholder="Add feature"
-              onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addFeature())}
-            />
-            <Button type="button" variant="outline" size="sm" onClick={addFeature}>
-              <Tag className="h-4 w-4" />
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Company Story</h2>
+            <Button variant="outline" size="sm" onClick={addStoryItem}>
+              <Plus className="h-4 w-4 mr-2" /> Add Story Item
             </Button>
           </div>
-          <div className="flex flex-wrap gap-1">
-            {(data.features || []).map((feature, index) => (
-              <Badge key={index} variant="secondary" className="text-xs">
-                {feature}
-                <button
-                  type="button"
-                  onClick={() => removeFeature(index)}
-                  className="ml-1 hover:text-red-500"
+          
+          {data.story.map((item, index) => (
+            <Card key={index} className="relative">
+              {data.story.length > 1 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="absolute top-2 right-2 text-destructive hover:text-destructive z-10"
+                  onClick={() => removeStoryItem(index)}
                 >
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
-            ))}
-          </div>
-        </div>
-
-        {/* Images */}
-        <div className="grid gap-4 md:grid-cols-2">
-          <div>
-            <label className="block text-sm font-medium mb-1">Image 1</label>
-            <p className="text-xs text-gray-500 mb-2">Required: 500x600px</p>
-            <div className="flex gap-2 mb-2">
-              <Input
-                value={data.image1}
-                onChange={(e) => handleChange("image1", e.target.value)}
-                placeholder="Image 1 URL"
-                className="flex-1"
-              />
-              <div className="relative">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) handleImageUpload(file, "image1");
-                  }}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  disabled={uploading === "image1"}
-                />
-                <Button variant="outline" disabled={uploading === "image1"}>
-                  {uploading === "image1" ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Upload className="h-4 w-4" />
-                  )}
+                  <Trash2 className="h-4 w-4" />
                 </Button>
-              </div>
-            </div>
-            <Input
-              value={data.alt_text_image1}
-              onChange={(e) => handleChange("alt_text_image1", e.target.value)}
-              placeholder="Alt text for image 1"
-              className="mb-2"
-            />
-            {data.image1 && (
-              <img
-                src={getAssetUrl(data.image1)}
-                alt="Image 1 Preview"
-                className="w-full h-32 object-cover rounded"
-              />
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Image 2</label>
-            <p className="text-xs text-gray-500 mb-2">Required: 500x600px</p>
-            <div className="flex gap-2 mb-2">
-              <Input
-                value={data.image2}
-                onChange={(e) => handleChange("image2", e.target.value)}
-                placeholder="Image 2 URL"
-                className="flex-1"
-              />
-              <div className="relative">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) handleImageUpload(file, "image2");
-                  }}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  disabled={uploading === "image2"}
-                />
-                <Button variant="outline" disabled={uploading === "image2"}>
-                  {uploading === "image2" ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Upload className="h-4 w-4" />
+              )}
+              <CardContent className="pt-6 space-y-4">
+                <div className="text-sm font-medium text-muted-foreground">
+                  Story Item {index + 1}
+                </div>
+                
+                <div>
+                  <Label>Title</Label>
+                  <Input
+                    value={item.title}
+                    onChange={(e) => updateStoryItem(index, "title", e.target.value)}
+                    placeholder="e.g., Our Beginning"
+                  />
+                </div>
+                
+                <div>
+                  <Label>Description</Label>
+                  <RichTextEditor
+                    value={item.description}
+                    onChange={(value) => updateStoryItem(index, "description", value)}
+                    placeholder="Write the story description..."
+                  />
+                </div>
+                
+                <div>
+                  <Label>Image</Label>
+                  <div className="flex gap-2 mb-2">
+                    <Input
+                      value={item.image}
+                      onChange={(e) => updateStoryItem(index, "image", e.target.value)}
+                      placeholder="Image URL"
+                      className="flex-1"
+                    />
+                    <div className="relative">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleImageUpload(file, index);
+                        }}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        disabled={uploading === `story-${index}`}
+                      />
+                      <Button variant="outline" disabled={uploading === `story-${index}`}>
+                        {uploading === `story-${index}` ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Upload className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                  {item.image && (
+                    <img
+                      src={getAssetUrl(item.image)}
+                      alt={item.title || `Story image ${index + 1}`}
+                      className="w-full h-48 object-cover rounded"
+                    />
                   )}
-                </Button>
-              </div>
-            </div>
-            <Input
-              value={data.alt_text_image2}
-              onChange={(e) => handleChange("alt_text_image2", e.target.value)}
-              placeholder="Alt text for image 2"
-              className="mb-2"
-            />
-            {data.image2 && (
-              <img
-                src={getAssetUrl(data.image2)}
-                alt="Image 2 Preview"
-                className="w-full h-32 object-cover rounded"
-              />
-            )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Core Values Section */}
+        <div className="border-t pt-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Core Values</h2>
+            <Button variant="outline" size="sm" onClick={addValueItem}>
+              <Plus className="h-4 w-4 mr-2" /> Add Value
+            </Button>
+          </div>
+          
+          <div className="grid gap-4 md:grid-cols-2">
+            {data.values.map((item, index) => {
+              const SelectedIcon = iconOptions.find(opt => opt.value === item.icon)?.icon || Sparkles;
+              
+              return (
+                <Card key={index} className="relative">
+                  {data.values.length > 1 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="absolute top-2 right-2 text-destructive hover:text-destructive z-10"
+                      onClick={() => removeValueItem(index)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                  <CardContent className="pt-6 space-y-4">
+                    <div className="flex items-center gap-2">
+                      <SelectedIcon className="w-5 h-5 text-primary" />
+                      <span className="text-sm font-medium text-muted-foreground">
+                        Value {index + 1}
+                      </span>
+                    </div>
+                    
+                    <div>
+                      <Label>Icon</Label>
+                      <Select
+                        value={item.icon}
+                        onValueChange={(value) => updateValueItem(index, "icon", value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select icon" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {iconOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              <div className="flex items-center gap-2">
+                                <option.icon className="w-4 h-4" />
+                                <span>{option.label}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label>Title</Label>
+                      <Input
+                        value={item.title}
+                        onChange={(e) => updateValueItem(index, "title", e.target.value)}
+                        placeholder="e.g., Artistry First"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label>Description</Label>
+                      <Textarea
+                        value={item.description}
+                        onChange={(e) => updateValueItem(index, "description", e.target.value)}
+                        placeholder="Describe this core value..."
+                        rows={3}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
 
-        {/* Buttons */}
-        <div className="border-t pt-6">
-          <h3 className="text-lg font-semibold mb-4">Button Configuration</h3>
-          <div className="grid gap-4 md:grid-cols-3">
-            {/* Primary Button */}
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base">Primary Button</CardTitle>
-                  <Switch
-                    checked={data.primaryButton?.enabled}
-                    onCheckedChange={async (checked) => {
-                      const updatedData = { ...data, primaryButton: { ...data.primaryButton!, enabled: checked } };
-                      setData(updatedData);
-                      setSaving(true);
-                      try {
-                        const response = await authFetch(`${API_BASE_URL}/api/cms/home/homepage_about/`, {
-                          method: "PUT",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ page: "home", section: "homepage_about", data: updatedData }),
-                        });
-                        if (response.ok) {
-                          toast({ title: "Changes saved automatically" });
-                        } else {
-                          toast({ variant: "destructive", title: "Save failed" });
-                        }
-                      } catch (err) {
-                        toast({ variant: "destructive", title: "Save failed" });
-                      } finally {
-                        setSaving(false);
-                      }
-                    }}
-                  />
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div>
-                  <Label>Button Text</Label>
-                  <Input
-                    value={data.primaryButton?.buttonText || ""}
-                    onChange={(e) =>
-                      setData({ ...data, primaryButton: { ...data.primaryButton!, buttonText: e.target.value } })
-                    }
-                    placeholder="Book Appointment"
-                  />
-                </div>
-                <div>
-                  <Label>Module to Open</Label>
-                  <Select
-                    value={data.primaryButton?.chooseModuleToOpen || ""}
-                    onValueChange={(value) =>
-                      setData({ ...data, primaryButton: { ...data.primaryButton!, chooseModuleToOpen: value } })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select module" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="appointment">Book Appointment</SelectItem>
-                      <SelectItem value="demo">Book Demo</SelectItem>
-                      <SelectItem value="call">Call Us</SelectItem>
-                      <SelectItem value="email">Email Us</SelectItem>
-                      <SelectItem value="url">External Url</SelectItem>
-                      <SelectItem value="services">Our Services (for more info)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                {data.primaryButton?.chooseModuleToOpen === "url" && (
-                  <div>
-                    <Label>External URL</Label>
-                    <Input
-                      value={data.primaryButton?.url || ""}
-                      onChange={(e) =>
-                        setData({ ...data, primaryButton: { ...data.primaryButton!, url: e.target.value } })
-                      }
-                      placeholder="https://example.com"
-                    />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Secondary Button */}
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base">Secondary Button</CardTitle>
-                  <Switch
-                    checked={data.secondaryButton?.enabled}
-                    onCheckedChange={async (checked) => {
-                      const updatedData = { ...data, secondaryButton: { ...data.secondaryButton!, enabled: checked } };
-                      setData(updatedData);
-                      setSaving(true);
-                      try {
-                        const response = await authFetch(`${API_BASE_URL}/api/cms/home/homepage_about/`, {
-                          method: "PUT",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ page: "home", section: "homepage_about", data: updatedData }),
-                        });
-                        if (response.ok) {
-                          toast({ title: "Changes saved automatically" });
-                        } else {
-                          toast({ variant: "destructive", title: "Save failed" });
-                        }
-                      } catch (err) {
-                        toast({ variant: "destructive", title: "Save failed" });
-                      } finally {
-                        setSaving(false);
-                      }
-                    }}
-                  />
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div>
-                  <Label>Button Text</Label>
-                  <Input
-                    value={data.secondaryButton?.buttonText || ""}
-                    onChange={(e) =>
-                      setData({ ...data, secondaryButton: { ...data.secondaryButton!, buttonText: e.target.value } })
-                    }
-                    placeholder="Learn More"
-                  />
-                </div>
-                <div>
-                  <Label>Module to Open</Label>
-                  <Select
-                    value={data.secondaryButton?.chooseModuleToOpen || ""}
-                    onValueChange={(value) =>
-                      setData({ ...data, secondaryButton: { ...data.secondaryButton!, chooseModuleToOpen: value } })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select module" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="appointment">Book Appointment</SelectItem>
-                      <SelectItem value="demo">Book Demo</SelectItem>
-                      <SelectItem value="call">Call Us</SelectItem>
-                      <SelectItem value="email">Email Us</SelectItem>
-                      <SelectItem value="url">External Url</SelectItem>
-                      <SelectItem value="services">Our Services (for more info)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                {data.secondaryButton?.chooseModuleToOpen === "url" && (
-                  <div>
-                    <Label>External URL</Label>
-                    <Input
-                      value={data.secondaryButton?.url || ""}
-                      onChange={(e) =>
-                        setData({ ...data, secondaryButton: { ...data.secondaryButton!, url: e.target.value } })
-                      }
-                      placeholder="https://example.com"
-                    />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Tertiary Button */}
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base">Tertiary Button</CardTitle>
-                  <Switch
-                    checked={data.tertiaryButton?.enabled}
-                    onCheckedChange={async (checked) => {
-                      const updatedData = { ...data, tertiaryButton: { ...data.tertiaryButton!, enabled: checked } };
-                      setData(updatedData);
-                      setSaving(true);
-                      try {
-                        const response = await authFetch(`${API_BASE_URL}/api/cms/home/homepage_about/`, {
-                          method: "PUT",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ page: "home", section: "homepage_about", data: updatedData }),
-                        });
-                        if (response.ok) {
-                          toast({ title: "Changes saved automatically" });
-                        } else {
-                          toast({ variant: "destructive", title: "Save failed" });
-                        }
-                      } catch (err) {
-                        toast({ variant: "destructive", title: "Save failed" });
-                      } finally {
-                        setSaving(false);
-                      }
-                    }}
-                  />
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div>
-                  <Label>Button Text</Label>
-                  <Input
-                    value={data.tertiaryButton?.buttonText || ""}
-                    onChange={(e) =>
-                      setData({ ...data, tertiaryButton: { ...data.tertiaryButton!, buttonText: e.target.value } })
-                    }
-                    placeholder="Contact Us"
-                  />
-                </div>
-                <div>
-                  <Label>Module to Open</Label>
-                  <Select
-                    value={data.tertiaryButton?.chooseModuleToOpen || ""}
-                    onValueChange={(value) =>
-                      setData({ ...data, tertiaryButton: { ...data.tertiaryButton!, chooseModuleToOpen: value } })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select module" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="appointment">Book Appointment</SelectItem>
-                      <SelectItem value="demo">Book Demo</SelectItem>
-                      <SelectItem value="call">Call Us</SelectItem>
-                      <SelectItem value="email">Email Us</SelectItem>
-                      <SelectItem value="url">External Url</SelectItem>
-                      <SelectItem value="services">Our Services (for more info)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                {data.tertiaryButton?.chooseModuleToOpen === "url" && (
-                  <div>
-                    <Label>External URL</Label>
-                    <Input
-                      value={data.tertiaryButton?.url || ""}
-                      onChange={(e) =>
-                        setData({ ...data, tertiaryButton: { ...data.tertiaryButton!, url: e.target.value } })
-                      }
-                      placeholder="https://example.com"
-                    />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        {/* SEO */}
+        {/* SEO Settings */}
         <div className="border-t pt-6">
           <h3 className="text-lg font-semibold mb-4">SEO Settings</h3>
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium mb-1">SEO Title</label>
+              <Label>SEO Title</Label>
               <Input
                 value={data.seo.title}
                 onChange={(e) => setData({ ...data, seo: { ...data.seo, title: e.target.value } })}
@@ -701,16 +503,17 @@ export default function HomepageAboutPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">SEO Slug</label>
+              <Label>SEO Slug</Label>
               <Input
                 value={data.seo.slug}
                 onChange={(e) => setData({ ...data, seo: { ...data.seo, slug: e.target.value } })}
-                placeholder="url-slug"
+                placeholder="about-company-story"
               />
             </div>
           </div>
+          
           <div className="mt-4">
-            <label className="block text-sm font-medium mb-1">SEO Description</label>
+            <Label>SEO Description</Label>
             <Textarea
               value={data.seo.description}
               onChange={(e) => setData({ ...data, seo: { ...data.seo, description: e.target.value } })}
@@ -718,8 +521,9 @@ export default function HomepageAboutPage() {
               rows={2}
             />
           </div>
+          
           <div className="mt-4">
-            <label className="block text-sm font-medium mb-1">Keywords</label>
+            <Label>Keywords</Label>
             <div className="flex gap-2 mb-2">
               <Input
                 value={keywordInput}
@@ -745,13 +549,6 @@ export default function HomepageAboutPage() {
                 </Badge>
               ))}
             </div>
-          </div>
-          <div className="mt-4">
-            <SchemaMarkupEditor
-              value={data.seo.schemaMarkup || ""}
-              onChange={(value) => setData({ ...data, seo: { ...data.seo, schemaMarkup: value } })}
-              onValidationChange={setIsSchemaValid}
-            />
           </div>
         </div>
       </div>
